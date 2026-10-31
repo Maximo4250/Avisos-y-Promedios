@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function identidadPropia(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider == 'password';
+    }
+    function cursoDisponible(curso, ciclo) {
+      return curso is string && curso.matches('^[a-z0-9_-]{1,40}$')
+        && ((curso == '4b' && ciclo == 2026)
+          || get(/databases/$(database)/documents/ciclos/$(ciclo)/cursos/$(curso)).data.disponible == true);
+    }
+    function perfilValido() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['usuario','curso_predeterminado','ciclo','creada_en','actualizada_en'])
+        && d.keys().hasOnly(['usuario','curso_predeterminado','ciclo','creada_en','actualizada_en'])
+        && d.usuario is string && d.usuario.size() >= 3 && d.usuario.size() <= 30
+        && d.ciclo is int && d.ciclo == 2026
+        && cursoDisponible(d.curso_predeterminado, d.ciclo)
+        && d.creada_en is timestamp && d.actualizada_en == request.time;
+    }
+    match /usuarios/{uid} {
+      allow get: if identidadPropia(uid);
+      allow list: if false;
+      allow create: if identidadPropia(uid) && perfilValido()
+        && request.resource.data.creada_en == request.time;
+      allow update: if identidadPropia(uid) && perfilValido()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['curso_predeterminado','actualizada_en']);
+      allow delete: if false;
+    }
+    match /ciclos/{ciclo} {
+      allow read: if true;
+      allow write: if false;
+      match /cursos/{curso} {
+        allow read: if true;
+        allow write: if false;
+        match /avisos_semana/{dia} {
+          allow read: if true;
+          allow write: if false;
+        }
+      }
+    }
+    // Compatibilidad: 4to B, ciclo 2026, sigue leyendo su colección actual.
+    match /avisos_semana/{dia} { allow read: if true; allow write: if false; }
+    match /ideas_app/{id} {
+      allow create: if request.resource.data.keys().hasAll(['idea','curso','creada_en','estado'])
+        && request.resource.data.keys().hasOnly(['idea','curso','creada_en','estado'])
+        && request.resource.data.idea is string
+        && request.resource.data.idea.size() >= 10 && request.resource.data.idea.size() <= 1000
+        && request.resource.data.curso is string && request.resource.data.curso.size() <= 50
+        && request.resource.data.creada_en is timestamp && request.resource.data.estado == 'nueva';
+      allow read, update, delete: if false;
+    }
+    match /instalaciones_app/{id} {
+      function valida() {
+        return request.resource.data.keys().hasAll(['instalada_en','ultima_actividad','curso','version','compilacion','plataforma'])
+          && request.resource.data.keys().hasOnly(['instalada_en','ultima_actividad','curso','version','compilacion','plataforma'])
+          && id.matches('^[0-9a-f-]{36}$')
+          && request.resource.data.instalada_en is timestamp
+          && request.resource.data.ultima_actividad == request.time
+          && request.resource.data.curso is string && request.resource.data.curso.size() <= 50
+          && request.resource.data.version is string && request.resource.data.version.size() <= 30
+          && request.resource.data.compilacion is string && request.resource.data.compilacion.size() <= 30
+          && request.resource.data.plataforma == 'android';
+      }
+      allow create: if valida();
+      allow update: if valida() && request.resource.data.instalada_en == resource.data.instalada_en;
+      allow read, delete: if false;
+    }
+    // Conservar el namespace de NEXUS tal como estaba publicado.
+    match /nexus_users/{uid}/state/{document} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && document == 'current'
+        && request.resource.data.keys().hasOnly([
+          'tasks','evaluations','projects','sessions','schemaVersion','updatedAt'
+        ])
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.tasks is map
+        && request.resource.data.evaluations is map
+        && request.resource.data.projects is map
+        && request.resource.data.sessions is map
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    // Compatibilidad con namespaces ajenos a A&P que ya estaban habilitados.
+    // Excluir expresamente los protegidos para que esta regla no los vuelva públicos.
+    match /{collection}/{document=**} {
+      allow read, write: if !(collection in [
+        'usuarios','ciclos','avisos_semana','ideas_app','instalaciones_app','nexus_users'
+      ]) && !collection.matches('^_.*');
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

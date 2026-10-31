@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "481933571131",
+    "project_id": "evaluacionescolegio-5b5e2",
+    "storage_bucket": "evaluacionescolegio-5b5e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:481933571131:android:c3ae92eea20186ba5ad81e",
+        "android_client_info": {
+          "package_name": "avisos.promedios.proyect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxdrnQ2YDgdCX9pEZlM7C4sJ-xvjk2BcI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
