@@ -20,7 +20,7 @@ Las notas, el progreso de las tareas y el ID anterior se conservan. Los datos lo
 
 Si ya tenías notas como invitado, podés copiarlas desde **Mi cuenta → Importar mis notas de invitado**. Se conservan los originales. Solo se permite una importación y únicamente si esa cuenta no tiene notas en el curso y año que estás viendo.
 
-**Las notas y los checkboxes todavía no se sincronizan entre celulares.** Dos teléfonos pueden ingresar con la misma cuenta y compartir el curso asignado; las notas siguen locales. No desinstales la app esperando que la cuenta ya sea una copia de seguridad.
+**Desde A&P 1.2.2 las notas se sincronizan entre dispositivos con la misma cuenta, curso y ciclo.** Los checkboxes siguen siendo locales. Actualizá primero el celular que tiene las notas y esperá a ver Notas sincronizadas. Ver [guía de sincronización](SINCRONIZACION_GUIA.md).
 
 ## Notificaciones sin servidor de pago
 

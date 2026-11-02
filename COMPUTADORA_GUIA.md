@@ -21,7 +21,7 @@ Un enlace que termina en `.apk` siempre descarga Android. Para compartir ambas o
 
 Horarios, calendario, materias, promedios, pendientes, ideas, modo invitado y cuentas. Usa el Firebase existente y los mismos avisos. No se duplicó la base compartida ni se activó facturación.
 
-Las notas y los estados de tareas se guardan en el navegador y permanecen al cerrar y abrir. Instalar desde ese mismo navegador conserva esos datos. Otro navegador, perfil o dispositivo tiene su almacenamiento separado. Borrar los datos del sitio o usar incógnito puede perder esas notas. Todavía no hay sincronización de notas entre equipos.
+Desde 1.2.2, las notas se sincronizan con la cuenta, curso y ciclo. Los invitados y los estados de tareas siguen usando almacenamiento local. No borres datos del sitio mientras haya cambios pendientes de sincronizar. Actualizá ambos equipos y seguí [la guía de sincronización](SINCRONIZACION_GUIA.md).
 
 Las notificaciones push por curso continúan en Android. En computadora se consultan los avisos dentro de A&P: no se configuró push web. El conteo remoto de instalaciones actual sigue contando Android; no se etiquetan computadoras como si fueran teléfonos.
 

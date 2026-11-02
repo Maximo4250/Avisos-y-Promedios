@@ -1,6 +1,9 @@
 import 'package:flutter_application_2/data/contexto_academico.dart';
 import 'package:flutter_application_2/models/materia.dart';
 import 'package:path/path.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../models/identidad_instalacion.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// Acceso a la base de datos local (SQLite): materias y notas.
@@ -10,26 +13,38 @@ class DatabaseHelper {
   static Future<Database>? _apertura;
 
   static const String _dbName = 'notas_app.db';
-  static const int _dbVersion = 4;
+  static const int _dbVersion = 5;
+  static final cambios = ValueNotifier<int>(0);
+  static void avisarCambios() => cambios.value++;
+  // Constructor aislado para probar dos dispositivos con bases independientes.
+  DatabaseHelper.paraPruebas(Database db) : _basePrueba = db;
+  Database? _basePrueba;
 
   /// Datos precargados la primera vez que se crea la base.
   static const List<({String nombre, List<double> notas, bool esDoble})>
   _materiasIniciales = [
-    (nombre: 'Matemáticas', notas: [8.0, 9.5], esDoble: false),
+    (nombre: 'MatemÃ¡ticas', notas: [8.0, 9.5], esDoble: false),
     (nombre: 'Lengua', notas: [6.0, 8.0], esDoble: false),
-    (nombre: 'Biología', notas: [1.0], esDoble: false),
+    (nombre: 'BiologÃ­a', notas: [1.0], esDoble: false),
     (nombre: 'Cs Sociales', notas: [5.0], esDoble: true),
-    (nombre: 'Inglés', notas: [6.51], esDoble: false),
+    (nombre: 'InglÃ©s', notas: [6.51], esDoble: false),
     (nombre: 'Artes Visuales', notas: [7.0], esDoble: false),
-    (nombre: 'ED Física', notas: [4.5], esDoble: false),
+    (nombre: 'ED FÃ­sica', notas: [4.5], esDoble: false),
     (nombre: 'FVT', notas: [8.0], esDoble: false),
-    (nombre: 'EI Tecnología', notas: [0.0], esDoble: true),
+    (nombre: 'EI TecnologÃ­a', notas: [0.0], esDoble: true),
     (nombre: 'Form Cristiana', notas: [10.0], esDoble: false),
   ];
 
   DatabaseHelper._init();
 
+  static Future<DatabaseHelper> abrirParaPruebas(String path) async {
+    final helper = DatabaseHelper._init();
+    helper._basePrueba = await helper._initDB(path);
+    return helper;
+  }
+
   Future<Database> get database async {
+    if (_basePrueba != null) return _basePrueba!;
     if (_database != null) return _database!;
     try {
       _database = await (_apertura ??= _initDB(_dbName));
@@ -52,7 +67,16 @@ class DatabaseHelper {
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    // Teléfonos con la versión 1 reciben la columna nueva automáticamente.
+    if (oldVersion < 5) {
+      await db.execute('ALTER TABLE notas ADD COLUMN sync_id TEXT');
+      await db.execute(
+        'ALTER TABLE notas ADD COLUMN borrada INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE notas ADD COLUMN pendiente INTEGER NOT NULL DEFAULT 1',
+      );
+    }
+    // TelÃ©fonos con la versiÃ³n 1 reciben la columna nueva automÃ¡ticamente.
     if (oldVersion < 2) {
       await db.execute(
         'ALTER TABLE materias ADD COLUMN es_doble INTEGER NOT NULL DEFAULT 0',
@@ -98,6 +122,9 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         materia_id INTEGER NOT NULL,
         valor REAL NOT NULL,
+        sync_id TEXT,
+        borrada INTEGER NOT NULL DEFAULT 0,
+        pendiente INTEGER NOT NULL DEFAULT 1,
         FOREIGN KEY (materia_id) REFERENCES materias (id) ON DELETE CASCADE
       )
     ''');
@@ -199,10 +226,10 @@ class DatabaseHelper {
     });
   }
 
-  /// Importación explícita, única y solo hacia una cuenta sin notas en ese curso/año.
+  /// ImportaciÃ³n explÃ­cita, Ãºnica y solo hacia una cuenta sin notas en ese curso/aÃ±o.
   Future<void> importarNotasInvitado() async {
     final scope = _scope;
-    if (scope[0] == 'invitado') throw StateError('Primero iniciá sesión.');
+    if (scope[0] == 'invitado') throw StateError('Primero iniciÃ¡ sesiÃ³n.');
     final marker = 'importado|${scope.join('|')}';
     final db = await database;
     await db.transaction((txn) async {
@@ -245,7 +272,7 @@ class DatabaseHelper {
             : matches.first['id'] as int;
         final notas = await txn.query(
           'notas',
-          where: 'materia_id = ?',
+          where: 'materia_id = ? AND borrada = 0',
           whereArgs: [m['id']],
         );
         for (final nota in notas) {
@@ -254,6 +281,7 @@ class DatabaseHelper {
       }
       await txn.insert('preferencias_locales', {'clave': marker, 'valor': '1'});
     });
+    avisarCambios();
     ContextoAcademico.instance.revision.value++;
   }
 
@@ -269,7 +297,7 @@ class DatabaseHelper {
       whereArgs: scope,
     );
     final notasRows = await db.rawQuery(
-      'SELECT n.* FROM notas n JOIN materias m ON m.id = n.materia_id WHERE m.propietario = ? AND m.curso = ? AND m.ciclo = ? ORDER BY n.id',
+      'SELECT n.* FROM notas n JOIN materias m ON m.id = n.materia_id WHERE m.propietario = ? AND m.curso = ? AND m.ciclo = ? AND n.borrada = 0 ORDER BY n.id',
       scope,
     );
 
@@ -300,22 +328,142 @@ class DatabaseHelper {
   // --- NOTAS ---
 
   Future<int> insertarNota(int materiaId, double valor) async {
+    if (!valor.isFinite || valor < 0 || valor > 10) {
+      throw ArgumentError('Nota inválida');
+    }
     final scope = _scope;
     final db = await database;
-    return db.rawInsert(
-      'INSERT INTO notas (materia_id, valor) SELECT id, ? FROM materias WHERE id = ? AND $_whereScope',
-      [valor, materiaId, ...scope],
+    final id = await db.rawInsert(
+      'INSERT INTO notas (materia_id, valor, sync_id) SELECT id, ?, ? FROM materias WHERE id = ? AND $_whereScope',
+      [valor, IdentidadInstalacion.nueva().id, materiaId, ...scope],
     );
+    avisarCambios();
+    return id;
   }
 
-  /// Elimina UNA nota de la materia con ese valor (la primera que encuentre).
   Future<int> eliminarNota(int materiaId, double valor) async {
     final scope = _scope;
     final db = await database;
-    return db.rawDelete(
-      'DELETE FROM notas WHERE id = ('
-      'SELECT n.id FROM notas n JOIN materias m ON m.id = n.materia_id WHERE n.materia_id = ? AND n.valor = ? AND m.propietario = ? AND m.curso = ? AND m.ciclo = ? ORDER BY n.id LIMIT 1)',
+    // Asignar IDs antes de ocultar una nota antigua; así el borrado también viaja.
+    await prepararIdsSync(scope);
+    final count = await db.rawUpdate(
+      'UPDATE notas SET borrada = 1, pendiente = 1 WHERE id = ('
+      'SELECT n.id FROM notas n JOIN materias m ON m.id = n.materia_id '
+      'WHERE n.borrada = 0 AND n.materia_id = ? AND n.valor = ? '
+      'AND m.propietario = ? AND m.curso = ? AND m.ciclo = ? ORDER BY n.id LIMIT 1)',
       [materiaId, valor, ...scope],
     );
+    avisarCambios();
+    return count;
+  }
+
+  Future<void> prepararIdsSync(List<Object> scope) async {
+    final db = await database;
+    await db.transaction((t) async {
+      final rows = await t.rawQuery(
+        'SELECT n.*, m.nombre FROM notas n JOIN materias m ON m.id=n.materia_id '
+        'WHERE m.propietario=? AND m.curso=? AND m.ciclo=? ORDER BY n.id',
+        scope,
+      );
+      final ocurrencias = <String, int>{};
+      for (final row in rows) {
+        if (row['sync_id'] != null &&
+            !(row['sync_id'] as String).startsWith('legado_')) {
+          continue;
+        }
+        final clave = jsonEncode([
+          row['nombre'],
+          (row['valor'] as num).toDouble(),
+        ]);
+        final numero = ocurrencias.update(
+          clave,
+          (v) => v + 1,
+          ifAbsent: () => 1,
+        );
+        if (row['sync_id'] != null) continue;
+        final id =
+            'legado_${base64Url.encode(utf8.encode('$clave|$numero')).replaceAll('=', '')}';
+        await t.update(
+          'notas',
+          {'sync_id': id},
+          where: 'id=?',
+          whereArgs: [row['id']],
+        );
+      }
+    });
+  }
+
+  Future<List<Map<String, Object?>>> notasPendientes(List<Object> scope) async {
+    await prepararIdsSync(scope);
+    final db = await database;
+    return db.rawQuery(
+      'SELECT n.*, m.nombre, m.es_doble FROM notas n JOIN materias m ON m.id=n.materia_id '
+      'WHERE m.propietario=? AND m.curso=? AND m.ciclo=? AND n.pendiente=1 ORDER BY n.id',
+      scope,
+    );
+  }
+
+  Future<void> confirmarNota(List<Object> scope, String id, int borrada) async {
+    final db = await database;
+    await db.rawUpdate(
+      'UPDATE notas SET pendiente=0 WHERE sync_id=? AND borrada=? '
+      'AND materia_id IN (SELECT id FROM materias WHERE $_whereScope)',
+      [id, borrada, ...scope],
+    );
+  }
+
+  /// Fusión por ID: una lista remota vacía nunca elimina las notas locales.
+  /// Una marca de borrado gana siempre; reenviar una nota antigua no la revive.
+  Future<bool> fusionarNotas(
+    List<Object> scope,
+    List<Map<String, dynamic>> remotas,
+  ) async {
+    final db = await database;
+    var cambio = false;
+    await db.transaction((t) async {
+      for (final r in remotas) {
+        final rows = await t.rawQuery(
+          'SELECT n.* FROM notas n JOIN materias m ON m.id=n.materia_id '
+          'WHERE m.propietario=? AND m.curso=? AND m.ciclo=? AND n.sync_id=?',
+          [...scope, r['id']],
+        );
+        if (rows.isNotEmpty) {
+          final local = rows.first;
+          if (r['borrada'] == true && local['borrada'] != 1) {
+            await t.update(
+              'notas',
+              {'borrada': 1, 'pendiente': 0},
+              where: 'id=?',
+              whereArgs: [local['id']],
+            );
+            cambio = true;
+          }
+          continue;
+        }
+        final materias = await t.query(
+          'materias',
+          where: '$_whereScope AND nombre=?',
+          whereArgs: [...scope, r['materia']],
+        );
+        final mid = materias.isNotEmpty
+            ? materias.first['id'] as int
+            : await t.insert('materias', {
+                'nombre': r['materia'],
+                'es_doble': r['doble'] == true ? 1 : 0,
+                'propietario': scope[0],
+                'curso': scope[1],
+                'ciclo': scope[2],
+              });
+        await t.insert('notas', {
+          'materia_id': mid,
+          'valor': r['valor'],
+          'sync_id': r['id'],
+          'borrada': r['borrada'] == true ? 1 : 0,
+          'pendiente': 0,
+        });
+        cambio = true;
+      }
+    });
+    return cambio;
   }
 }

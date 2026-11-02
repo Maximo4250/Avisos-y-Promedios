@@ -1,6 +1,7 @@
 import 'package:flutter_application_2/core/app_bar_cuenta.dart';
 import 'package:flutter_application_2/core/tendencia_notas.dart';
 import 'package:flutter/material.dart';
+import '../services/sincronizacion_notas.dart';
 import 'package:flutter_application_2/core/nota_utils.dart';
 import 'package:flutter_application_2/models/materia.dart';
 import 'package:flutter_application_2/screens/horario_screen.dart';
@@ -24,6 +25,7 @@ class _MateriasScreenState extends State<MateriasScreen> {
   void initState() {
     super.initState();
     _cargarMaterias();
+    DatabaseHelper.cambios.addListener(_cargarMaterias);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       VerificadorFirebase.comprobarActualizacion(context);
@@ -38,6 +40,12 @@ class _MateriasScreenState extends State<MateriasScreen> {
       _materias = materiasDB;
       _cargando = false;
     });
+  }
+
+  @override
+  void dispose() {
+    DatabaseHelper.cambios.removeListener(_cargarMaterias);
+    super.dispose();
   }
 
   void _ordenarPorPromedio() {
@@ -122,6 +130,14 @@ class _MateriasScreenState extends State<MateriasScreen> {
               ),
             ),
           ),
+        ),
+      ),
+      bottomNavigationBar: ValueListenableBuilder<String>(
+        valueListenable: SincronizacionNotas.instance.estado,
+        builder: (context, texto, _) => TextButton.icon(
+          onPressed: SincronizacionNotas.instance.reintentar,
+          icon: const Icon(Icons.cloud_sync_outlined, size: 16),
+          label: Text(texto, style: const TextStyle(fontSize: 12)),
         ),
       ),
       body: _cargando

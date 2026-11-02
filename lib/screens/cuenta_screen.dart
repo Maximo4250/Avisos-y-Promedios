@@ -220,7 +220,7 @@ class _CuentaScreenState extends State<CuentaScreen> {
           ),
           const Text(
             'Las notas están separadas por cuenta, curso y año. El respaldo y la sincronización '
-            'de notas entre celulares aún no forman parte de esta entrega.',
+            'de notas entre dispositivos están disponibles con tu cuenta. Actualizá primero el celular que tiene tus notas y esperá a que indique Notas sincronizadas. Las notas de invitado se importan con el botón de abajo.',
             style: TextStyle(fontSize: 13, color: Colors.white70),
           ),
           TextButton(

@@ -17,6 +17,23 @@ class IngresoNotasScreen extends StatefulWidget {
 class _IngresoNotasScreenState extends State<IngresoNotasScreen> {
   final TextEditingController _notaController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    DatabaseHelper.cambios.addListener(_recargar);
+  }
+
+  Future<void> _recargar() async {
+    final materias = await DatabaseHelper.instance.obtenerMaterias();
+    final actual = materias.where((m) => m.id == widget.materia.id);
+    if (!mounted || actual.isEmpty) return;
+    setState(() {
+      widget.materia.notas
+        ..clear()
+        ..addAll(actual.first.notas);
+    });
+  }
+
   void _mostrarMensaje(String texto) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
@@ -35,7 +52,7 @@ class _IngresoNotasScreenState extends State<IngresoNotasScreen> {
     if (!mounted) return;
 
     setState(() {
-      widget.materia.notas.add(nota);
+      // La lista se vuelve a leer desde la base local.
       _notaController.clear();
     });
   }
@@ -47,7 +64,7 @@ class _IngresoNotasScreenState extends State<IngresoNotasScreen> {
     if (id != null) await DatabaseHelper.instance.eliminarNota(id, nota);
     if (!mounted) return;
 
-    setState(() => widget.materia.notas.removeAt(index));
+    await _recargar();
   }
 
   void _mostrarOpcionesNota(int index, double nota) {
@@ -87,6 +104,7 @@ class _IngresoNotasScreenState extends State<IngresoNotasScreen> {
 
   @override
   void dispose() {
+    DatabaseHelper.cambios.removeListener(_recargar);
     _notaController.dispose();
     super.dispose();
   }

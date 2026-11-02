@@ -29,6 +29,29 @@ service cloud.firestore {
           .hasOnly(['curso_predeterminado','actualizada_en']);
       allow delete: if false;
     }
+
+    // Notas privadas. El perfil y las reglas de NEXUS permanecen separados.
+    match /usuarios/{uid}/libretas/{libreta}/notas/{nota} {
+      function notaValida() {
+        let d = request.resource.data;
+        return d.keys().hasAll(['materia','valor','doble','borrada','curso','ciclo','actualizada_en'])
+          && d.keys().hasOnly(['materia','valor','doble','borrada','curso','ciclo','actualizada_en'])
+          && d.materia is string && d.materia.size() > 0 && d.materia.size() <= 100
+          && d.valor is number && d.valor >= 0 && d.valor <= 10
+          && d.doble is bool && d.borrada is bool
+          && d.ciclo is int && d.ciclo >= 2026 && d.ciclo <= 2100
+          && d.curso is string && d.curso.matches('^[a-z0-9_-]{1,40}$')
+          && libreta == string(d.ciclo) + '_' + d.curso
+          && nota.size() <= 500 && d.actualizada_en == request.time;
+      }
+      allow read: if identidadPropia(uid);
+      allow create: if identidadPropia(uid) && notaValida();
+      allow update: if identidadPropia(uid) && notaValida()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['borrada','actualizada_en'])
+        && (resource.data.borrada == false || request.resource.data.borrada == true);
+      allow delete: if false;
+    }
+
     match /ciclos/{ciclo} {
       allow read: if true;
       allow write: if false;

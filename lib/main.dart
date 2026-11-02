@@ -1,6 +1,7 @@
 import 'package:flutter_application_2/services/sesion_service.dart';
 import 'package:flutter_application_2/services/registro_instalacion.dart';
 import 'dart:async';
+import 'services/sincronizacion_notas.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options_web.dart';
 import 'services/base_plataforma.dart';
@@ -67,6 +68,7 @@ Future<void> main() async {
 Future<void> _iniciarCuentas() async {
   try {
     await SesionService.instance.iniciar();
+    SincronizacionNotas.instance.iniciar();
   } catch (error) {
     debugPrint(
       'Cuentas disponibles cuando se complete la configuración de Firebase: $error',

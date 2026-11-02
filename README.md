@@ -5,7 +5,7 @@ Aplicación escolar para consultar horarios y avisos, organizar pendientes y seg
 ## Usar la aplicación
 
 - **Android:** [Descargar el APK de la última versión publicada](https://github.com/Maximo4250/Avisos-y-Promedios/releases/latest/download/app-release.apk).
-- **Computadora:** versión web instalable desde Chrome o Edge. La página común estará en [A&P para celular y computadora](https://maximo4250.github.io/Avisos-y-Promedios/) después de activar GitHub Pages y ejecutar el flujo de publicación.
+- **Computadora:** versión web instalable desde Chrome o Edge. La página común está en [A&P para celular y computadora](https://maximo4250.github.io/Avisos-y-Promedios/).
 
 En Android, abrir el APK descargado y elegir Instalar o Actualizar. En computadora, abrir la versión web y elegir **Instalar A&P** desde la aplicación o el menú del navegador. Un APK se instala en Android; la computadora utiliza la aplicación web.
 
@@ -18,11 +18,15 @@ En Android, abrir el APK descargado y elegir Instalar o Actualizar. En computado
 - Cuenta opcional con correo y contraseña, modo invitado y preferencias de curso.
 - Envío de ideas para la aplicación.
 
-Los avisos y perfiles usan Firebase. Las notas y las actividades marcadas se guardan en cada dispositivo o navegador: todavía no se sincronizan entre equipos. No borrar los datos del sitio si se quieren conservar las notas de computadora. Las notificaciones push por curso están disponibles en Android; la versión web consulta los avisos dentro de la aplicación.
+Los avisos y perfiles usan Firebase. Desde 1.2.2, las notas se sincronizan entre dispositivos actualizados con la misma cuenta, curso y ciclo. Los invitados y las actividades marcadas siguen guardándose localmente. No borrar datos mientras haya cambios pendientes de sincronizar. Las notificaciones push por curso están disponibles en Android; la versión web consulta los avisos dentro de la aplicación.
+
+## Probar la sincronización
+
+Actualizá primero el celular que contiene tus notas, iniciá sesión y esperá **Notas sincronizadas**. Si tus notas son de invitado, usá el botón de importación desde ese celular. Después abrí la web actualizada con la misma cuenta. [Pasos completos](SINCRONIZACION_GUIA.md).
 
 ## Publicar la versión preparada
 
-1. Revisar la Release **v1.2.1** en borrador y publicar cuando corresponda. Mantener el nombre del archivo Android como `app-release.apk`.
+1. Revisar la Release **v1.2.2** en borrador y publicar cuando corresponda. Mantener el nombre del archivo Android como `app-release.apk`.
 2. En **Settings → Pages**, seleccionar **GitHub Actions** como origen.
 3. En **Actions**, ejecutar **Publicar A&P para computadora → Run workflow**.
 4. Compartir la dirección común: `https://maximo4250.github.io/Avisos-y-Promedios/`.
