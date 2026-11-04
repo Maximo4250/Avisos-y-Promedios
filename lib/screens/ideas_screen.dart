@@ -1,3 +1,4 @@
+import 'package:flutter_application_2/core/app_theme.dart';
 import 'package:flutter_application_2/core/app_bar_cuenta.dart';
 import 'package:flutter_application_2/data/contexto_academico.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -44,14 +45,14 @@ class _IdeasScreenState extends State<IdeasScreen> {
       };
     }
     try {
-      await _envio!.set(_contenidoEnvio!).timeout(const Duration(seconds: 15));
+      await _envio!.set(_contenidoEnvio!).timeout(Duration(seconds: 15));
       if (!mounted) return;
       _texto.clear();
       _envio = null;
       _contenidoEnvio = null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('¡Gracias! Tu idea fue enviada.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('¡Gracias! Tu idea fue enviada.')));
     } on FirebaseException catch (error) {
       if (!mounted) return;
       setState(
@@ -73,28 +74,28 @@ class _IdeasScreenState extends State<IdeasScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBarCuenta(
-      title: const Text(
+      title: Text(
         'Ideas para A&P',
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(color: AppTheme.sobreAcento),
       ),
     ),
     body: SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.lightbulb_outline, size: 48, color: Colors.amber),
-          const SizedBox(height: 18),
-          const Text(
+          Icon(Icons.lightbulb_outline, size: 48, color: AppTheme.detalle),
+          SizedBox(height: 18),
+          Text(
             '¿Qué te gustaría mejorar?',
             style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Una función nueva, algo que te cuesta usar o una idea para organizarte mejor.',
             style: TextStyle(color: Colors.white70),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           TextField(
             controller: _texto,
             enabled: !_enviando,
@@ -105,25 +106,25 @@ class _IdeasScreenState extends State<IdeasScreen> {
               labelText: 'Tu idea',
               alignLabelWithHint: true,
               hintText: 'Me gustaría que la app…',
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(),
               errorText: _error,
               errorMaxLines: 4,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _enviando ? null : _enviar,
             icon: _enviando
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.send_outlined),
+                : Icon(Icons.send_outlined),
             label: Text(_enviando ? 'Enviando…' : 'Enviar idea'),
           ),
-          const SizedBox(height: 14),
-          const Text(
+          SizedBox(height: 14),
+          Text(
             'Se enviará el texto y tu curso al creador de A&P. No hace falta incluir tu nombre ni datos personales.',
             style: TextStyle(fontSize: 12, color: Colors.white60),
           ),

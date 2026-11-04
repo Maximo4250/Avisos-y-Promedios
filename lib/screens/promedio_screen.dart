@@ -1,3 +1,4 @@
+import 'package:flutter_application_2/core/app_theme.dart';
 import 'package:flutter_application_2/core/app_bar_cuenta.dart';
 import 'package:flutter_application_2/services/firestore_service.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -14,6 +15,9 @@ class ResultadoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(
+      context,
+    ); // Actualizar también los acentos de las pantallas abiertas.
     final cursadas = cursadasDeMateria(materia.nombre);
     return Scaffold(
       appBar: AppBarCuenta(
@@ -21,11 +25,11 @@ class ResultadoScreen extends StatelessWidget {
           'Datos e historia - ${materia.nombre}',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: Colors.black),
+          style: TextStyle(color: AppTheme.sobreAcento),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final historia = _historia();
@@ -33,14 +37,14 @@ class ResultadoScreen extends StatelessWidget {
             if (constraints.maxWidth < 650) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [historia, const SizedBox(height: 16), datos],
+                children: [historia, SizedBox(height: 16), datos],
               );
             }
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(flex: 3, child: historia),
-                const SizedBox(width: 20),
+                SizedBox(width: 20),
                 Expanded(flex: 2, child: datos),
               ],
             );
@@ -53,48 +57,45 @@ class ResultadoScreen extends StatelessWidget {
   Widget _datos(List<CursadaMateria> cursadas) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Cursada',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             if (cursadas.isEmpty)
-              const Text('Esta materia no tiene un horario registrado.')
+              Text('Esta materia no tiene un horario registrado.')
             else ...[
-              const Text(
+              Text(
                 'Carga semanal estimada',
                 style: TextStyle(color: Colors.white70),
               ),
               Text(
                 duracionSemanal(cursadas),
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Días y horarios',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               for (final cursada in cursadas)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.only(bottom: 8),
                   child: Text(
                     '${cursada.dia}: ${cursada.inicio} – ${cursada.fin}',
                   ),
                 ),
-              const SizedBox(height: 8),
-              const Text(
+              SizedBox(height: 8),
+              Text(
                 'Calculado hasta la siguiente clase o la salida. Puede incluir recreos.',
                 style: TextStyle(fontSize: 12, color: Colors.white60),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               _PendientesMateria(
                 key: ValueKey(materia.nombre),
                 materia: materia.nombre,
@@ -110,17 +111,17 @@ class ResultadoScreen extends StatelessWidget {
     final notas = materia.notas;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Historia de notas',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             if (notas.isEmpty)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
                 child: Text(
                   'Agregá notas para ver el gráfico de evolución.',
@@ -137,7 +138,7 @@ class ResultadoScreen extends StatelessWidget {
                   color: colorSegunNota(materia.promedio),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               SizedBox(
                 height: 250,
                 child: LineChart(
@@ -152,7 +153,7 @@ class ResultadoScreen extends StatelessWidget {
                           for (var i = 0; i < notas.length; i++)
                             FlSpot((i + 1).toDouble(), notas[i]),
                         ],
-                        color: Colors.amber,
+                        color: AppTheme.detalle,
                         dotData: FlDotData(
                           show: true,
                           getDotPainter: (spot, percent, barData, index) {
@@ -169,14 +170,14 @@ class ResultadoScreen extends StatelessWidget {
                       ),
                     ],
                     titlesData: FlTitlesData(
-                      topTitles: const AxisTitles(
+                      topTitles: AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
                       ),
-                      rightTitles: const AxisTitles(
+                      rightTitles: AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
                       ),
                       leftTitles: AxisTitles(
-                        axisNameWidget: const Text('Calificación'),
+                        axisNameWidget: Text('Calificación'),
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 40,
@@ -184,7 +185,7 @@ class ResultadoScreen extends StatelessWidget {
                         ),
                       ),
                       bottomTitles: AxisTitles(
-                        axisNameWidget: const Text('Nota'),
+                        axisNameWidget: Text('Nota'),
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 30,
@@ -195,7 +196,7 @@ class ResultadoScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Tooltip(
                 message:
                     'Tendencia de hasta las últimas 5 notas, en orden de carga. '
@@ -203,7 +204,7 @@ class ResultadoScreen extends StatelessWidget {
                 child: Text(
                   tendenciaNotas(notas),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, color: Colors.white70),
+                  style: TextStyle(fontSize: 13, color: Colors.white70),
                 ),
               ),
             ],
@@ -231,17 +232,20 @@ class _PendientesMateriaState extends State<_PendientesMateria> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(
+      context,
+    ); // Actualizar también los acentos de las pantallas abiertas.
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _avisos,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Text(
+          return Text(
             'No se pudieron consultar los pendientes.',
-            style: TextStyle(fontSize: 13, color: Colors.amber),
+            style: TextStyle(fontSize: 13, color: AppTheme.detalle),
           );
         }
         if (!snapshot.hasData) {
-          return const Text(
+          return Text(
             'Consultando pendientes…',
             style: TextStyle(fontSize: 13, color: Colors.white70),
           );
@@ -261,10 +265,10 @@ class _PendientesMateriaState extends State<_PendientesMateria> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: tareas == 0 ? Colors.greenAccent : Colors.amber,
+                color: tareas == 0 ? Colors.greenAccent : AppTheme.detalle,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               examenes == 0
                   ? 'Sin exámenes pendientes'

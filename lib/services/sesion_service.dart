@@ -39,6 +39,7 @@ class SesionService extends ChangeNotifier with WidgetsBindingObserver {
   final Map<String, Map<String, dynamic>> _cursos = {
     '4b': {'nombre': '4to B', 'disponible': true},
   };
+  Map<String, dynamic>? get catalogoCursoAsignado => _cursos[cursoAsignado];
   List<Map<String, dynamic>> get cursos =>
       _cursos.entries.map((e) => {...e.value, 'id': e.key}).toList();
   void _avisar() {

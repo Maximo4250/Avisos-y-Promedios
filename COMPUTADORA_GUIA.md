@@ -8,7 +8,7 @@ Al publicar la carpeta preparada con GitHub Pages, el enlace común será:
 
 https://maximo4250.github.io/Avisos-y-Promedios/
 
-Es la dirección prevista; no se ha activado ni publicado desde este trabajo.
+La versión publicada se actualiza ejecutando el flujo de GitHub Actions después de subir los cambios. Una compilación local de prueba no cambia el sitio publicado.
 
 La página ofrece dos botones:
 

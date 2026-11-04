@@ -1,3 +1,4 @@
+import 'package:flutter_application_2/core/app_theme.dart';
 import 'package:flutter_application_2/core/app_bar_cuenta.dart';
 import 'package:flutter_application_2/core/tendencia_notas.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +56,7 @@ class _MateriasScreenState extends State<MateriasScreen> {
   void _abrirHorario() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const DiaSemana()),
+      MaterialPageRoute(builder: (context) => DiaSemana()),
     );
   }
 
@@ -70,20 +71,23 @@ class _MateriasScreenState extends State<MateriasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(
+      context,
+    ); // Actualizar también los acentos de las pantallas abiertas.
     final promedioGeneral = calcularPromedioGeneral(_materias);
 
     return Scaffold(
       appBar: AppBarCuenta(
-        title: const Text(
+        title: Text(
           'Mis Materias',
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: AppTheme.sobreAcento),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: AppTheme.acento,
         automaticallyImplyLeading: false,
         leadingWidth: widget.enBarra ? 100 : 300,
         leading: widget.enBarra
             ? IconButton(
-                icon: const Icon(Icons.bar_chart),
+                icon: Icon(Icons.bar_chart),
                 tooltip: 'Ordenar por mayor promedio',
                 onPressed: _ordenarPorPromedio,
               )
@@ -92,29 +96,26 @@ class _MateriasScreenState extends State<MateriasScreen> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
-                      foregroundColor: Colors.amber,
+                      foregroundColor: AppTheme.detalle,
                     ),
                     onPressed: _abrirHorario,
-                    child: const Text('Dias Semana'),
+                    child: Text('Dias Semana'),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.bar_chart, size: 38),
+                    icon: Icon(Icons.bar_chart, size: 38),
                     tooltip: 'Ordenar por mayor promedio',
                     onPressed: _ordenarPorPromedio,
                   ),
                 ],
               ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(42),
+          preferredSize: Size.fromHeight(42),
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 6),
+            padding: EdgeInsets.only(bottom: 6),
             child: Center(
               child: Container(
-                margin: const EdgeInsets.only(right: 12),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
+                margin: EdgeInsets.only(right: 12),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(6),
@@ -136,14 +137,14 @@ class _MateriasScreenState extends State<MateriasScreen> {
         valueListenable: SincronizacionNotas.instance.estado,
         builder: (context, texto, _) => TextButton.icon(
           onPressed: SincronizacionNotas.instance.reintentar,
-          icon: const Icon(Icons.cloud_sync_outlined, size: 16),
-          label: Text(texto, style: const TextStyle(fontSize: 12)),
+          icon: Icon(Icons.cloud_sync_outlined, size: 16),
+          label: Text(texto, style: TextStyle(fontSize: 12)),
         ),
       ),
       body: _cargando
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : ListView.builder(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               itemCount: _materias.length,
               itemBuilder: (context, index) {
                 final materia = _materias[index];
@@ -155,7 +156,7 @@ class _MateriasScreenState extends State<MateriasScreen> {
                     : colorSegunNota(materia.promedio);
 
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 12.0),
+                  margin: EdgeInsets.only(bottom: 12.0),
                   child: ListTile(
                     leading: Icon(Icons.book, color: color),
                     title: Wrap(
@@ -165,39 +166,39 @@ class _MateriasScreenState extends State<MateriasScreen> {
                       children: [
                         Text(
                           materia.nombre,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           '$totalNotas ${totalNotas == 1 ? 'nota' : 'notas'}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white70,
-                          ),
+                          style: TextStyle(fontSize: 12, color: Colors.white70),
                         ),
                         if (materia.esDoble)
-                          const Text(
+                          Text(
                             'Peso doble',
-                            style: TextStyle(fontSize: 12, color: Colors.amber),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.detalle,
+                            ),
                           ),
                       ],
                     ),
                     subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 6),
+                      padding: EdgeInsets.only(top: 6),
                       child: totalNotas == 0
-                          ? const Text('Sin notas cargadas')
+                          ? Text('Sin notas cargadas')
                           : Wrap(
                               spacing: 12,
                               runSpacing: 4,
                               children: [
                                 Text(
                                   'Aprobadas: $aprobadas',
-                                  style: const TextStyle(color: Colors.white70),
+                                  style: TextStyle(color: Colors.white70),
                                 ),
                                 Text(
                                   'A recuperar: $aRecuperar',
                                   style: TextStyle(
                                     color: aRecuperar > 0
-                                        ? Colors.amber
+                                        ? AppTheme.detalle
                                         : Colors.white70,
                                     fontWeight: aRecuperar > 0
                                         ? FontWeight.bold
@@ -206,7 +207,7 @@ class _MateriasScreenState extends State<MateriasScreen> {
                                 ),
                                 Text(
                                   tendenciaNotas(materia.notas),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white70,
                                     fontSize: 12,
                                   ),
@@ -218,7 +219,7 @@ class _MateriasScreenState extends State<MateriasScreen> {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           'Promedio',
                           style: TextStyle(fontSize: 10, color: Colors.white70),
                         ),

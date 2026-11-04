@@ -1,52 +1,68 @@
+import '../models/registro_aviso.dart';
 import 'package:flutter_application_2/data/contexto_academico.dart';
 import 'package:flutter_application_2/models/actividad_semana.dart';
 import 'package:flutter_application_2/data/resumen_horario.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 /// Lectura de los avisos (evaluaciones y tareas) publicados en Firestore.
 class FirestoreService {
-  static const String _coleccion = 'avisos_semana';
-
-  /// Campo del documento. Está escrito así (con "c") en Firebase: no corregir
-  /// aquí sin corregirlo también en la consola de Firestore.
-  static const String _campoEvaluaciones = 'evalucaciones';
-
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  CollectionReference<Map<String, dynamic>> get _avisos {
+
+  static CollectionReference<Map<String, dynamic>> coleccionAvisos(
+    FirebaseFirestore db,
+    String curso,
+    int ciclo,
+  ) => db
+      .collection('ciclos')
+      .doc('$ciclo')
+      .collection('cursos')
+      .doc(curso)
+      .collection('avisos');
+
+  /// Cada curso lee exclusivamente su colección de avisos individuales.
+  Stream<List<RegistroAviso>> registros({String? curso, int? ciclo}) {
     final c = ContextoAcademico.instance;
-    if (c.legado) return _db.collection(_coleccion);
-    return _db
-        .collection('ciclos')
-        .doc('${c.ciclo}')
-        .collection('cursos')
-        .doc(c.curso)
-        .collection(_coleccion);
+    return coleccionAvisos(
+      _db,
+      curso ?? c.curso,
+      ciclo ?? c.ciclo,
+    ).snapshots().map(
+      (snapshot) =>
+          snapshot.docs.map((d) => RegistroAviso(d.id, d.data())).toList(),
+    );
   }
 
   Stream<List<Map<String, dynamic>>> obtenerEvaluacionesPorDia(String dia) {
-    return _avisos.doc(dia).snapshots().map(_extraerEvaluaciones);
+    return registros().map(
+      (rows) => rows
+          .where((r) => !r.archivado && r.dia == dia)
+          .map((r) => r.contenido)
+          .toList(),
+    );
   }
 
   /// Avisos aún publicados en el horario semanal para esta materia.
   Stream<List<Map<String, dynamic>>> obtenerAvisosPorMateria(String materia) {
-    return _avisos.snapshots().map((snapshot) {
-      return snapshot.docs
-          .expand((documento) => _extraerEvaluaciones(documento))
+    return registros().map(
+      (rows) => rows
+          .where((r) => !r.archivado)
+          .map((r) => r.contenido)
           .where(
-            (aviso) =>
-                esMismaMateria(materia, (aviso['materia'] ?? '').toString()),
+            (a) => esMismaMateria(materia, (a['materia'] ?? '').toString()),
           )
-          .toList();
-    });
+          .toList(),
+    );
   }
 
   /// Lee la colección existente; no crea ni modifica avisos.
-  Stream<List<ActividadSemana>> obtenerActividadesSemana() {
-    return _avisos.snapshots().map((snapshot) {
+  Stream<List<ActividadSemana>> obtenerActividadesSemana({
+    String? curso,
+    int? ciclo,
+  }) {
+    return registros(curso: curso, ciclo: ciclo).map((rows) {
       final actividades = <String, ActividadSemana>{};
-      for (final documento in snapshot.docs) {
-        for (final original in _extraerEvaluaciones(documento)) {
+      for (final registro in rows.where((r) => !r.archivado)) {
+        for (final original in [registro.contenido]) {
           final aviso = Map<String, dynamic>.from(original);
           // Firestore Timestamp se convierte solo en memoria.
           for (final campo in const [
@@ -64,28 +80,11 @@ class FirestoreService {
               aviso[campo] = (aviso[campo] as Timestamp).toDate();
             }
           }
-          final actividad = ActividadSemana.desdeAviso(documento.id, aviso);
+          final actividad = ActividadSemana.desdeAviso(registro.dia, aviso);
           actividades[actividad.id] = actividad;
         }
       }
       return ordenarActividades(actividades.values);
     });
-  }
-
-  List<Map<String, dynamic>> _extraerEvaluaciones(
-    DocumentSnapshot<Map<String, dynamic>> snapshot,
-  ) {
-    final data = snapshot.data();
-    if (data == null || !data.containsKey(_campoEvaluaciones)) return [];
-
-    try {
-      final List<dynamic> listaCruda = data[_campoEvaluaciones];
-      return listaCruda
-          .map((item) => Map<String, dynamic>.from(item as Map))
-          .toList();
-    } catch (e) {
-      debugPrint('Error al convertir evaluaciones: $e');
-      return [];
-    }
   }
 }

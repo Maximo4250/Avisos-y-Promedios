@@ -1,3 +1,5 @@
+import 'services/tema_service.dart';
+import 'services/delegados_service.dart';
 import 'package:flutter_application_2/services/sesion_service.dart';
 import 'package:flutter_application_2/services/registro_instalacion.dart';
 import 'dart:async';
@@ -15,6 +17,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await prepararBasePlataforma();
+    await TemaService.instance.cargar();
     await Firebase.initializeApp(
       options: kIsWeb ? opcionesFirebaseWeb : null,
     ).timeout(const Duration(seconds: 15));
@@ -69,6 +72,7 @@ Future<void> _iniciarCuentas() async {
   try {
     await SesionService.instance.iniciar();
     SincronizacionNotas.instance.iniciar();
+    DelegadosService.instance.iniciar();
   } catch (error) {
     debugPrint(
       'Cuentas disponibles cuando se complete la configuración de Firebase: $error',
@@ -95,11 +99,14 @@ class MyAppNotas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Avisos y Promedios',
-      theme: AppTheme.dark,
-      home: const NavegacionPrincipal(),
+    return ListenableBuilder(
+      listenable: TemaService.instance,
+      builder: (context, _) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Avisos y Promedios',
+        theme: AppTheme.dark,
+        home: const NavegacionPrincipal(),
+      ),
     );
   }
 }

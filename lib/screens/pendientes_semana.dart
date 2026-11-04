@@ -1,3 +1,4 @@
+import 'package:flutter_application_2/core/app_theme.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/actividad_semana.dart';
@@ -43,7 +44,7 @@ class _PendientesSemanaState extends State<PendientesSemana> {
         widget.actividades ?? FirestoreService().obtenerActividadesSemana();
     _leerProgreso();
     // Actualiza los días restantes si se deja abierta la pantalla al cambiar de día.
-    _reloj = Timer.periodic(const Duration(minutes: 1), (_) {
+    _reloj = Timer.periodic(Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
   }
@@ -90,7 +91,7 @@ class _PendientesSemanaState extends State<PendientesSemana> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('No se pudo guardar el progreso. Intentá nuevamente.'),
         ),
       );
@@ -104,22 +105,22 @@ class _PendientesSemanaState extends State<PendientesSemana> {
 
   @override
   Widget build(BuildContext context) {
-    if (_cargando) return const Center(child: CircularProgressIndicator());
+    Theme.of(
+      context,
+    ); // Actualizar también los acentos de las pantallas abiertas.
+    if (_cargando) return Center(child: CircularProgressIndicator());
     if (_errorLocal) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'No se pudo leer tu progreso local.',
                 textAlign: TextAlign.center,
               ),
-              TextButton(
-                onPressed: _leerProgreso,
-                child: const Text('Reintentar'),
-              ),
+              TextButton(onPressed: _leerProgreso, child: Text('Reintentar')),
             ],
           ),
         ),
@@ -131,11 +132,11 @@ class _PendientesSemanaState extends State<PendientesSemana> {
         if (snapshot.hasError && !snapshot.hasData) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'No se pudieron cargar los avisos. Revisá tu conexión.',
                     textAlign: TextAlign.center,
                   ),
@@ -145,7 +146,7 @@ class _PendientesSemanaState extends State<PendientesSemana> {
                           widget.actividades ??
                           FirestoreService().obtenerActividadesSemana();
                     }),
-                    child: const Text('Reintentar'),
+                    child: Text('Reintentar'),
                   ),
                 ],
               ),
@@ -153,7 +154,7 @@ class _PendientesSemanaState extends State<PendientesSemana> {
           );
         }
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator());
         }
         final actividades = snapshot.data!;
         final ahora = DateTime.now();
@@ -189,37 +190,37 @@ class _PendientesSemanaState extends State<PendientesSemana> {
           _Filtro.sinFecha => 'Evaluaciones sin fecha',
         };
         return ListView.builder(
-          key: const PageStorageKey('pendientes-semana'),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+          key: PageStorageKey('pendientes-semana'),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 28),
           itemCount: visibles.length + 1,
           itemBuilder: (context, index) {
             if (index > 0) return _tarjeta(visibles[index - 1], ahora);
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Mi semana',
                   style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
                 ),
-                const Text(
+                Text(
                   'Los mismos avisos, organizados para vos.',
                   style: TextStyle(color: Colors.white70, fontSize: 15),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Resumen semanal',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 25,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Wrap(
                           spacing: 24,
                           runSpacing: 12,
@@ -227,7 +228,7 @@ class _PendientesSemanaState extends State<PendientesSemana> {
                             _indicador(
                               '$pendientes',
                               'Tareas pendientes',
-                              Colors.amber,
+                              AppTheme.detalle,
                             ),
                             _indicador(
                               '$proximas',
@@ -245,20 +246,20 @@ class _PendientesSemanaState extends State<PendientesSemana> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                   'Tu progreso se guarda solo en este dispositivo.',
                   style: TextStyle(fontSize: 17, color: Colors.white60),
                 ),
                 if (snapshot.hasError)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 8),
                     child: Text(
                       'No se pudo actualizar. Se muestran los últimos avisos disponibles.',
-                      style: TextStyle(color: Colors.amber),
+                      style: TextStyle(color: AppTheme.detalle),
                     ),
                   ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Wrap(
                   spacing: 8,
                   runSpacing: 4,
@@ -271,27 +272,24 @@ class _PendientesSemanaState extends State<PendientesSemana> {
                     _chip(_Filtro.sinFecha, 'Sin fecha'),
                   ],
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 Text(
                   titulo,
-                  style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                 ),
-                const Text(
+                Text(
                   'Exámenes ordenados por fecha. Las tareas se mantienen hasta que las completes.',
                   style: TextStyle(fontSize: 18, color: Colors.white60),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 if (visibles.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 28),
+                    padding: EdgeInsets.symmetric(vertical: 28),
                     child: Text(
                       actividades.isEmpty
                           ? 'No hay actividades para mostrar.'
                           : 'No hay actividades en esta sección.',
-                      style: const TextStyle(color: Colors.white70),
+                      style: TextStyle(color: Colors.white70),
                     ),
                   ),
               ],
@@ -313,17 +311,14 @@ class _PendientesSemanaState extends State<PendientesSemana> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      Text(
-        etiqueta,
-        style: const TextStyle(fontSize: 12, color: Colors.white70),
-      ),
+      Text(etiqueta, style: TextStyle(fontSize: 12, color: Colors.white70)),
     ],
   );
 
   Widget _chip(_Filtro filtro, String texto) => ChoiceChip(
     label: Text(texto),
     selected: _filtro == filtro,
-    selectedColor: Colors.amber.withValues(alpha: 0.22),
+    selectedColor: AppTheme.detalle.withValues(alpha: 0.22),
     onSelected: (_) => setState(() => _filtro = filtro),
   );
 
@@ -333,16 +328,16 @@ class _PendientesSemanaState extends State<PendientesSemana> {
         ? Colors.white54
         : actividad.vencida(ahora) || actividad.esEvaluacion
         ? Colors.redAccent
-        : Colors.amber;
+        : AppTheme.detalle;
     return Card(
       key: ValueKey(actividad.id),
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: color.withValues(alpha: 0.35)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(14),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -351,14 +346,14 @@ class _PendientesSemanaState extends State<PendientesSemana> {
                 value: completada,
                 semanticLabel:
                     'Completar tarea de ${actividad.materia}: ${actividad.descripcion}',
-                activeColor: Colors.amber,
+                activeColor: AppTheme.detalle,
                 onChanged: _guardando.contains(actividad.id)
                     ? null
                     : (valor) => _completar(actividad, valor ?? false),
               )
             else
               Padding(
-                padding: const EdgeInsets.only(top: 4, right: 12),
+                padding: EdgeInsets.only(top: 4, right: 12),
                 child: Icon(
                   actividad.esEvaluacion
                       ? Icons.event_note
@@ -378,7 +373,7 @@ class _PendientesSemanaState extends State<PendientesSemana> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     actividad.materia,
                     style: TextStyle(
@@ -389,13 +384,13 @@ class _PendientesSemanaState extends State<PendientesSemana> {
                           : null,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     actividad.descripcion,
-                    style: const TextStyle(color: Colors.white70),
+                    style: TextStyle(color: Colors.white70),
                   ),
                   if (actividad.esEvaluacion) ...[
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     Text(
                       actividad.fechaTexto(ahora),
                       style: TextStyle(fontSize: 12, color: color),

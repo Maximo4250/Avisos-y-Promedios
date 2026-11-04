@@ -85,10 +85,20 @@ const List<DiaEscolar> _dias4b = [
   ),
 ];
 
+List<DiaEscolar> get horarioCuartoB => List.unmodifiable(_dias4b);
+
 List<DiaEscolar> get diasEscolares {
   final c = ContextoAcademico.instance;
-  if (c.legado) return _dias4b;
-  final raw = c.catalogo?['horario'] as List? ?? [];
+  return horarioParaCurso(c.curso, c.ciclo, c.catalogo);
+}
+
+List<DiaEscolar> horarioParaCurso(
+  String curso,
+  int ciclo,
+  Map<String, dynamic>? catalogo,
+) {
+  if (curso == '4b' && ciclo == 2026) return _dias4b;
+  final raw = catalogo?['horario'] as List? ?? [];
   return [
     for (final dynamic d in raw)
       DiaEscolar(

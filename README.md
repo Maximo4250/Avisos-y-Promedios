@@ -17,6 +17,15 @@ En Android, abrir el APK descargado y elegir Instalar o Actualizar. En computado
 - Materias, notas, promedios, gráficos y datos de cursada.
 - Cuenta opcional con correo y contraseña, modo invitado y preferencias de curso.
 - Envío de ideas para la aplicación.
+- Reparación automática de nombres de materias dañados, conservando notas e identificadores.
+- Siete colores de tema disponibles en Mi cuenta.
+- Delegados asignados por el administrador para cargar tareas y evaluaciones.
+- Avisos individuales por curso y año, con archivado y registro de autor.
+
+En 1.3.0 los avisos se leen exclusivamente desde `ciclos/{año}/cursos/{curso}/avisos`.
+Los avisos antiguos se organizan manualmente siguiendo [la guía](AVISOS_POR_CURSO_GUIA.md).
+En Días Semana las cuentas consultan su curso asignado y los invitados el seleccionado.
+Los delegados publican y archivan únicamente en el curso y año de su permiso.
 
 Los avisos y perfiles usan Firebase. Desde 1.2.2, las notas se sincronizan entre dispositivos actualizados con la misma cuenta, curso y ciclo. Los invitados y las actividades marcadas siguen guardándose localmente. No borrar datos mientras haya cambios pendientes de sincronizar. Las notificaciones push por curso están disponibles en Android; la versión web consulta los avisos dentro de la aplicación.
 
@@ -26,7 +35,7 @@ Actualizá primero el celular que contiene tus notas, iniciá sesión y esperá 
 
 ## Publicar la versión preparada
 
-1. Revisar la Release **v1.2.2** en borrador y publicar cuando corresponda. Mantener el nombre del archivo Android como `app-release.apk`.
+1. Revisar la Release **v1.3.0** cuando esté preparada y publicar cuando corresponda. Mantener el nombre del archivo Android como `app-release.apk`.
 2. En **Settings → Pages**, seleccionar **GitHub Actions** como origen.
 3. En **Actions**, ejecutar **Publicar A&P para computadora → Run workflow**.
 4. Compartir la dirección común: `https://maximo4250.github.io/Avisos-y-Promedios/`.
@@ -56,6 +65,8 @@ La configuración de cliente Firebase incluida identifica el proyecto y no es un
 - [Instalación y publicación para computadora](COMPUTADORA_GUIA.md)
 - [Cuentas y cursos](FASE_2_GUIA.md)
 - [Calendario y fechas](CALENDARIO_GUIA.md)
+- [Asignación de delegados](DELEGADOS_GUIA.md)
+- [Avisos por curso y organización manual](AVISOS_POR_CURSO_GUIA.md)
 - [Reglas Firebase](configuracion_firebase/README.md)
 
 [Versiones y novedades](https://github.com/Maximo4250/Avisos-y-Promedios/releases)

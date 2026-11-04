@@ -1,3 +1,4 @@
+import '../data/nombre_materia.dart';
 import 'package:flutter_application_2/data/contexto_academico.dart';
 import 'package:flutter_application_2/models/materia.dart';
 import 'package:path/path.dart';
@@ -13,7 +14,7 @@ class DatabaseHelper {
   static Future<Database>? _apertura;
 
   static const String _dbName = 'notas_app.db';
-  static const int _dbVersion = 5;
+  static const int _dbVersion = 6;
   static final cambios = ValueNotifier<int>(0);
   static void avisarCambios() => cambios.value++;
   // Constructor aislado para probar dos dispositivos con bases independientes.
@@ -23,15 +24,15 @@ class DatabaseHelper {
   /// Datos precargados la primera vez que se crea la base.
   static const List<({String nombre, List<double> notas, bool esDoble})>
   _materiasIniciales = [
-    (nombre: 'MatemÃ¡ticas', notas: [8.0, 9.5], esDoble: false),
+    (nombre: 'Matemáticas', notas: [8.0, 9.5], esDoble: false),
     (nombre: 'Lengua', notas: [6.0, 8.0], esDoble: false),
-    (nombre: 'BiologÃ­a', notas: [1.0], esDoble: false),
+    (nombre: 'Biología', notas: [1.0], esDoble: false),
     (nombre: 'Cs Sociales', notas: [5.0], esDoble: true),
-    (nombre: 'InglÃ©s', notas: [6.51], esDoble: false),
+    (nombre: 'Inglés', notas: [6.51], esDoble: false),
     (nombre: 'Artes Visuales', notas: [7.0], esDoble: false),
-    (nombre: 'ED FÃ­sica', notas: [4.5], esDoble: false),
+    (nombre: 'ED Física', notas: [4.5], esDoble: false),
     (nombre: 'FVT', notas: [8.0], esDoble: false),
-    (nombre: 'EI TecnologÃ­a', notas: [0.0], esDoble: true),
+    (nombre: 'EI Tecnología', notas: [0.0], esDoble: true),
     (nombre: 'Form Cristiana', notas: [10.0], esDoble: false),
   ];
 
@@ -76,7 +77,7 @@ class DatabaseHelper {
         'ALTER TABLE notas ADD COLUMN pendiente INTEGER NOT NULL DEFAULT 1',
       );
     }
-    // TelÃ©fonos con la versiÃ³n 1 reciben la columna nueva automÃ¡ticamente.
+    // Teléfonos con la versión 1 reciben la columna nueva automáticamente.
     if (oldVersion < 2) {
       await db.execute(
         'ALTER TABLE materias ADD COLUMN es_doble INTEGER NOT NULL DEFAULT 0',
@@ -101,6 +102,57 @@ class DatabaseHelper {
         "INSERT INTO progreso_avisos (aviso_id, completada, contexto) SELECT aviso_id, completada, 'invitado|2026|4b' FROM progreso_avisos_v3",
       );
       await db.execute('DROP TABLE progreso_avisos_v3');
+    }
+    if (oldVersion < 6) await _repararMaterias(db);
+  }
+
+  /// onUpgrade se ejecuta dentro de una transacción de SQLite. Conserva un
+  /// respaldo y todos los registros de notas, incluso borrados y pendientes.
+  Future<void> _repararMaterias(Database db) async {
+    await db.execute(
+      'CREATE TABLE materias_antes_v6 AS SELECT * FROM materias',
+    );
+    await db.execute('CREATE TABLE notas_antes_v6 AS SELECT * FROM notas');
+    final grupos = <String, int>{};
+    final rows = await db.query('materias', orderBy: 'id');
+    for (final row in rows) {
+      final nombre = normalizarNombreMateria(row['nombre'] as String);
+      final clave = jsonEncode([
+        row['propietario'],
+        row['curso'],
+        row['ciclo'],
+        nombre,
+      ]);
+      final id = row['id'] as int;
+      final destino = grupos[clave];
+      if (destino == null) {
+        grupos[clave] = id;
+        if (nombre != row['nombre']) {
+          await db.update(
+            'materias',
+            {'nombre': nombre},
+            where: 'id=?',
+            whereArgs: [id],
+          );
+        }
+      } else {
+        // Cambia solo la relación con la materia; no deduplica notas por valor.
+        await db.update(
+          'notas',
+          {'materia_id': destino},
+          where: 'materia_id=?',
+          whereArgs: [id],
+        );
+        if (row['es_doble'] == 1) {
+          await db.update(
+            'materias',
+            {'es_doble': 1},
+            where: 'id=?',
+            whereArgs: [destino],
+          );
+        }
+        await db.delete('materias', where: 'id=?', whereArgs: [id]);
+      }
     }
   }
 
@@ -216,7 +268,7 @@ class DatabaseHelper {
               : []);
       for (final dynamic m in defaults) {
         await txn.insert('materias', {
-          'nombre': m['nombre'],
+          'nombre': normalizarNombreMateria(m['nombre'] as String),
           'es_doble': m['es_doble'] == true ? 1 : 0,
           'propietario': scope[0],
           'curso': scope[1],
@@ -226,10 +278,10 @@ class DatabaseHelper {
     });
   }
 
-  /// ImportaciÃ³n explÃ­cita, Ãºnica y solo hacia una cuenta sin notas en ese curso/aÃ±o.
+  /// Importación explícita, única y solo hacia una cuenta sin notas en ese curso/año.
   Future<void> importarNotasInvitado() async {
     final scope = _scope;
-    if (scope[0] == 'invitado') throw StateError('Primero iniciÃ¡ sesiÃ³n.');
+    if (scope[0] == 'invitado') throw StateError('Primero iniciá sesión.');
     final marker = 'importado|${scope.join('|')}';
     final db = await database;
     await db.transaction((txn) async {
@@ -260,10 +312,14 @@ class DatabaseHelper {
         whereArgs: ['invitado', scope[1], scope[2]],
       );
       for (final m in fuentes) {
-        final matches = destinos.where((d) => d['nombre'] == m['nombre']);
+        final matches = destinos.where(
+          (d) =>
+              normalizarNombreMateria(d['nombre'] as String) ==
+              normalizarNombreMateria(m['nombre'] as String),
+        );
         final id = matches.isEmpty
             ? await txn.insert('materias', {
-                'nombre': m['nombre'],
+                'nombre': normalizarNombreMateria(m['nombre'] as String),
                 'es_doble': m['es_doble'],
                 'propietario': scope[0],
                 'curso': scope[1],
@@ -319,6 +375,7 @@ class DatabaseHelper {
     final db = await database;
     return db.insert('materias', {
       ...materia.toMap(),
+      'nombre': normalizarNombreMateria(materia.nombre),
       'propietario': scope[0],
       'curso': scope[1],
       'ciclo': scope[2],
@@ -422,6 +479,7 @@ class DatabaseHelper {
     var cambio = false;
     await db.transaction((t) async {
       for (final r in remotas) {
+        final nombre = normalizarNombreMateria(r['materia'] as String);
         final rows = await t.rawQuery(
           'SELECT n.* FROM notas n JOIN materias m ON m.id=n.materia_id '
           'WHERE m.propietario=? AND m.curso=? AND m.ciclo=? AND n.sync_id=?',
@@ -443,12 +501,12 @@ class DatabaseHelper {
         final materias = await t.query(
           'materias',
           where: '$_whereScope AND nombre=?',
-          whereArgs: [...scope, r['materia']],
+          whereArgs: [...scope, nombre],
         );
         final mid = materias.isNotEmpty
             ? materias.first['id'] as int
             : await t.insert('materias', {
-                'nombre': r['materia'],
+                'nombre': nombre,
                 'es_doble': r['doble'] == true ? 1 : 0,
                 'propietario': scope[0],
                 'curso': scope[1],

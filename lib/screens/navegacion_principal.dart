@@ -1,3 +1,4 @@
+import 'package:flutter_application_2/core/app_theme.dart';
 import 'package:flutter_application_2/core/app_bar_cuenta.dart';
 import 'package:flutter_application_2/screens/curso_screen.dart';
 import 'package:flutter_application_2/data/contexto_academico.dart';
@@ -21,7 +22,7 @@ class NavegacionPrincipal extends StatefulWidget {
 }
 
 class _NavegacionPrincipalState extends State<NavegacionPrincipal> {
-  static const dorado = Colors.amber;
+  Color get dorado => AppTheme.detalle;
   var _navegadores = List.generate(5, (_) => GlobalKey<NavigatorState>());
   final _visitadas = <int>{3};
   int _indice = 3;
@@ -85,25 +86,28 @@ class _NavegacionPrincipalState extends State<NavegacionPrincipal> {
   Widget _pantalla(int indice) =>
       widget.secciones?[indice] ??
       switch (indice) {
-        0 => const DiaSemana(soloDias: true),
+        0 => DiaSemana(soloDias: true),
         1 => Scaffold(
           appBar: AppBarCuenta(
-            title: const Text(
+            title: Text(
               'Pendientes semana',
-              style: TextStyle(color: Colors.black),
+              style: TextStyle(color: AppTheme.sobreAcento),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          body: const PendientesSemana(),
+          body: PendientesSemana(),
         ),
-        2 => const CursoScreen(),
-        3 => const MateriasScreen(enBarra: true),
-        _ => const IdeasScreen(),
+        2 => CursoScreen(),
+        3 => MateriasScreen(enBarra: true),
+        _ => IdeasScreen(),
       };
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(
+      context,
+    ); // Actualizar también los acentos de las pantallas abiertas.
     return Scaffold(
       body: IndexedStack(
         index: _indice,
@@ -120,18 +124,18 @@ class _NavegacionPrincipalState extends State<NavegacionPrincipal> {
                 ),
               )
             else
-              const SizedBox.shrink(),
+              SizedBox.shrink(),
         ],
       ),
       bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFF0D0E10),
           border: Border(top: BorderSide(color: Color(0xFF292A2E))),
         ),
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Row(
               children: [
                 _boton(0, Icons.calendar_view_week_outlined, 'Días'),
@@ -149,23 +153,23 @@ class _NavegacionPrincipalState extends State<NavegacionPrincipal> {
                           width: 64,
                           height: 64,
                           child: Material(
-                            color: Colors.amber,
+                            color: AppTheme.acento,
                             shape: CircleBorder(
                               side: BorderSide(
                                 color: _indice == 2
                                     ? Colors.white
-                                    : Colors.amber,
+                                    : AppTheme.detalle,
                                 width: 2,
                               ),
                             ),
                             child: InkWell(
-                              customBorder: const CircleBorder(),
+                              customBorder: CircleBorder(),
                               onTap: () => _seleccionar(2),
                               child: Center(
                                 child: Text(
                                   ContextoAcademico.instance.nombreCurso,
                                   style: TextStyle(
-                                    color: Colors.black,
+                                    color: AppTheme.sobreAcento,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -190,7 +194,7 @@ class _NavegacionPrincipalState extends State<NavegacionPrincipal> {
 
   Widget _boton(int indice, IconData icono, String etiqueta) {
     final activo = _indice == indice;
-    final color = activo ? dorado : const Color(0xFFA4A5AC);
+    final color = activo ? dorado : Color(0xFFA4A5AC);
     return Expanded(
       child: Semantics(
         selected: activo,
@@ -199,12 +203,12 @@ class _NavegacionPrincipalState extends State<NavegacionPrincipal> {
           borderRadius: BorderRadius.circular(12),
           onTap: () => _seleccionar(indice),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: EdgeInsets.symmetric(vertical: 6),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icono, color: color, size: 25),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   etiqueta,
                   maxLines: 1,
@@ -214,7 +218,7 @@ class _NavegacionPrincipalState extends State<NavegacionPrincipal> {
                     fontWeight: activo ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Container(
                   width: 4,
                   height: 4,

@@ -52,6 +52,21 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+
+    // El administrador asigna este documento desde Firebase Console.
+    // Ningún cliente puede crearlo, editarlo ni listar permisos de otras cuentas.
+    match /usuarios/{uid}/permisos/{permiso} {
+      allow get: if identidadPropia(uid) && permiso == 'delegado';
+      allow list, write: if false;
+    }
+    function esDelegado(curso,ciclo) {
+      return request.auth != null && identidadPropia(request.auth.uid)
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)/permisos/delegado)
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)/permisos/delegado).data.get('activo',false) == true
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)/permisos/delegado).data.get('curso','') == curso
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)/permisos/delegado).data.get('ciclo',0) == ciclo
+        && cursoDisponible(curso,ciclo);
+    }
     match /ciclos/{ciclo} {
       allow read: if true;
       allow write: if false;
@@ -62,10 +77,52 @@ service cloud.firestore {
           allow read: if true;
           allow write: if false;
         }
+        match /avisos/{aviso} {
+          function baseValida() {
+            let d = request.resource.data;
+            return d.keys().hasAll(['datos','dia','curso','ciclo','autor_uid','creada_en','archivado'])
+              && d.keys().hasOnly(['datos','dia','curso','ciclo','autor_uid','creada_en','archivado',
+                'origen_documento','origen_indice'])
+              && d.datos is map && d.curso == curso && d.ciclo == int(ciclo)
+              && d.creada_en == request.time && d.archivado == false;
+          }
+          function nuevoValido() {
+            let d = request.resource.data;
+            let a = d.datos;
+            return !('origen_documento' in d) && !('origen_indice' in d)
+              && aviso.matches('^aviso_[a-f0-9-]{36}$')
+              && d.autor_uid == request.auth.uid && d.dia in ['Lu','Ma','Mi','Ju','Vi']
+              && a.keys().hasAll(['id','materia','tipo','detalle','fecha'])
+              && a.keys().hasOnly(['id','materia','tipo','detalle','fecha'])
+              && aviso == 'aviso_' + a.id
+              && a.materia is string && a.materia.size() > 0 && a.materia.size() <= 100
+              && a.tipo in ['tarea','evaluacion']
+              && a.detalle is string && a.detalle.size() >= 3 && a.detalle.size() <= 1000
+              && a.fecha is string
+              && (a.fecha.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+                || (a.tipo == 'tarea' && a.fecha == ''));
+          }
+          // Archivar no permite modificar contenido, autor, curso ni origen.
+          function archivadoValido() {
+            let d = request.resource.data;
+            return resource.data.archivado == false && d.archivado == true
+              && d.archivado_por == request.auth.uid && d.archivado_en == request.time
+              && d.diff(resource.data).affectedKeys()
+                .hasOnly(['archivado','archivado_por','archivado_en']);
+          }
+          allow read: if true;
+          allow create: if esDelegado(curso,int(ciclo)) && baseValida()
+            && nuevoValido();
+          allow update: if esDelegado(curso,int(ciclo)) && archivadoValido();
+          allow delete: if false;
+        }
       }
     }
-    // Compatibilidad: 4to B, ciclo 2026, sigue leyendo su colección actual.
-    match /avisos_semana/{dia} { allow read: if true; allow write: if false; }
+    // Solo lectura durante el traslado. La app ya no crea documentos por día.
+    match /avisos_semana/{dia} {
+      allow read: if true;
+      allow write: if false;
+    }
     match /ideas_app/{id} {
       allow create: if request.resource.data.keys().hasAll(['idea','curso','creada_en','estado'])
         && request.resource.data.keys().hasOnly(['idea','curso','creada_en','estado'])

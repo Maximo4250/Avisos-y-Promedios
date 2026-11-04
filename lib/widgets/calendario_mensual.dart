@@ -1,3 +1,4 @@
+import 'package:flutter_application_2/core/app_theme.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/actividad_semana.dart';
@@ -68,7 +69,7 @@ class CalendarioMensual extends StatefulWidget {
 
 class _CalendarioMensualState extends State<CalendarioMensual>
     with WidgetsBindingObserver {
-  static const _dorado = Color(0xFFDBB654);
+  Color get _dorado => AppTheme.detalle;
   late DateTime _mes, _hoy;
   Timer? _reloj;
   @override
@@ -77,10 +78,7 @@ class _CalendarioMensualState extends State<CalendarioMensual>
     _mes = DateTime(widget.seleccionada.year, widget.seleccionada.month);
     _hoy = fechaCivil(widget.hoy ?? DateTime.now());
     WidgetsBinding.instance.addObserver(this);
-    _reloj = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => _actualizarHoy(),
-    );
+    _reloj = Timer.periodic(Duration(minutes: 1), (_) => _actualizarHoy());
   }
 
   void _actualizarHoy() {
@@ -119,6 +117,9 @@ class _CalendarioMensualState extends State<CalendarioMensual>
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(
+      context,
+    ); // Actualizar también los acentos de las pantallas abiertas.
     final dias = diasDelMes(_mes);
     final semana = inicioSemana(_hoy);
     final cantidades = <DateTime, int>{};
@@ -132,26 +133,23 @@ class _CalendarioMensualState extends State<CalendarioMensual>
       }
     }
     return Container(
-      key: const ValueKey('calendario-mensual'),
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 12),
+      key: ValueKey('calendario-mensual'),
+      padding: EdgeInsets.fromLTRB(10, 8, 10, 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF18191D),
+        color: Color(0xFF18191D),
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFF303137)),
+        border: Border.all(color: Color(0xFF303137)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Expanded(
                 child: Text(
                   '${_meses[_mes.month - 1]} ${_mes.year}',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                   maxLines: 2,
                 ),
               ),
@@ -159,27 +157,23 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                 tooltip: 'Volver a hoy',
                 visualDensity: VisualDensity.compact,
                 onPressed: () => widget.onSeleccionar(_hoy),
-                icon: const Icon(
-                  Icons.today_outlined,
-                  size: 20,
-                  color: _dorado,
-                ),
+                icon: Icon(Icons.today_outlined, size: 20, color: _dorado),
               ),
               IconButton(
                 tooltip: 'Mes anterior',
                 visualDensity: VisualDensity.compact,
                 onPressed: () => _mover(-1),
-                icon: const Icon(Icons.chevron_left, size: 23),
+                icon: Icon(Icons.chevron_left, size: 23),
               ),
               IconButton(
                 tooltip: 'Mes siguiente',
                 visualDensity: VisualDensity.compact,
                 onPressed: () => _mover(1),
-                icon: const Icon(Icons.chevron_right, size: 23),
+                icon: Icon(Icons.chevron_right, size: 23),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Row(
             children: [
               for (final dia in [
@@ -193,15 +187,12 @@ class _CalendarioMensualState extends State<CalendarioMensual>
               ])
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    padding: EdgeInsets.symmetric(vertical: 6),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
                         dia,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white60,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.white60),
                       ),
                     ),
                   ),
@@ -213,8 +204,8 @@ class _CalendarioMensualState extends State<CalendarioMensual>
               builder: (context) {
                 final actual = mismaFecha(dias[fila * 7], semana);
                 return Container(
-                  key: actual ? const ValueKey('semana-actual') : null,
-                  margin: const EdgeInsets.symmetric(vertical: 2),
+                  key: actual ? ValueKey('semana-actual') : null,
+                  margin: EdgeInsets.symmetric(vertical: 2),
                   decoration: BoxDecoration(
                     color: actual
                         ? _dorado.withValues(alpha: 0.09)
@@ -239,7 +230,7 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                                 );
                             final cantidad = cantidades[fecha] ?? 0;
                             final color = hoy
-                                ? Colors.black
+                                ? AppTheme.sobreAcento
                                 : fecha.month == _mes.month
                                 ? Colors.white
                                 : Colors.white38;
@@ -255,7 +246,9 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                                 child: Tooltip(
                                   message: etiqueta,
                                   child: Material(
-                                    color: hoy ? _dorado : Colors.transparent,
+                                    color: hoy
+                                        ? AppTheme.acento
+                                        : Colors.transparent,
                                     borderRadius: BorderRadius.circular(17),
                                     child: InkWell(
                                       key: ValueKey(
@@ -296,7 +289,7 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                                                 ),
                                               ),
                                             ),
-                                            const SizedBox(height: 5),
+                                            SizedBox(height: 5),
                                             SizedBox(
                                               height: 7,
                                               width: 7,
@@ -308,7 +301,8 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                                                       ),
                                                       decoration: BoxDecoration(
                                                         color: hoy
-                                                            ? Colors.black
+                                                            ? AppTheme
+                                                                  .sobreAcento
                                                             : _dorado,
                                                         shape: BoxShape.circle,
                                                       ),
@@ -329,8 +323,8 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                 );
               },
             ),
-          const SizedBox(height: 8),
-          const Wrap(
+          SizedBox(height: 8),
+          Wrap(
             alignment: WrapAlignment.center,
             spacing: 12,
             runSpacing: 5,
@@ -340,11 +334,11 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                 style: TextStyle(color: _dorado, fontSize: 11),
               ),
               Text(
-                'Franja dorada · semana actual',
+                'Franja de color · semana actual',
                 style: TextStyle(color: Colors.white60, fontSize: 11),
               ),
               Text(
-                'Día dorado · hoy',
+                'Día destacado · hoy',
                 style: TextStyle(color: Colors.white60, fontSize: 11),
               ),
             ],

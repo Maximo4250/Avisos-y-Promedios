@@ -1,3 +1,4 @@
+import '../core/app_theme.dart';
 import 'package:flutter_application_2/core/app_bar_cuenta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/core/nota_utils.dart';
@@ -117,7 +118,7 @@ class _IngresoNotasScreenState extends State<IngresoNotasScreen> {
       appBar: AppBarCuenta(
         title: Text(
           'Notas: ${widget.materia.nombre}',
-          style: const TextStyle(color: Colors.black),
+          style: TextStyle(color: AppTheme.sobreAcento),
         ),
       ),
       body: Padding(
