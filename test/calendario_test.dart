@@ -82,6 +82,35 @@ void main() {
       '["Lu","tarea","Lengua","Resolver los ejercicios","2026-10-28T00:00:00.000"]',
     );
   });
+  testWidgets(
+    'Empieza compacto y permite desplegar y contraer sin cambiar la selección',
+    (tester) async {
+      await tester.pumpWidget(calendarioPrueba());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('fecha-2026-10-26')), findsOneWidget);
+      expect(find.byKey(const ValueKey('fecha-2026-11-1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('fecha-2026-10-12')), findsNothing);
+      final compacto = tester
+          .getSize(find.byKey(const ValueKey('calendario-mensual')))
+          .height;
+      await tester.tap(find.byTooltip('Mostrar todo el mes'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('fecha-2026-10-12')), findsOneWidget);
+      expect(
+        tester.getSize(find.byKey(const ValueKey('calendario-mensual'))).height,
+        greaterThan(compacto),
+      );
+      await tester.tap(find.byTooltip('Mostrar solo esta semana'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('fecha-2026-10-12')), findsNothing);
+      expect(
+        tester.getSize(find.byKey(const ValueKey('calendario-mensual'))).height,
+        compacto,
+      );
+      expect(find.byKey(const ValueKey('punto-2026-10-28')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets('Marca evaluaciones, tareas y trabajos sin inventar fechas', (
     tester,
   ) async {
@@ -133,6 +162,8 @@ void main() {
         ),
       ),
     );
+    await tester.tap(find.byTooltip('Mostrar todo el mes'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Mes siguiente'));
     await tester.pumpAndSettle();
     expect(find.text('Enero 2027'), findsOneWidget);

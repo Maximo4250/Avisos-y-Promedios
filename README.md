@@ -22,7 +22,7 @@ En Android, abrir el APK descargado y elegir Instalar o Actualizar. En computado
 - Delegados asignados por el administrador para cargar tareas y evaluaciones.
 - Avisos individuales por curso y año, con archivado y registro de autor.
 
-En 1.3.0 los avisos se leen exclusivamente desde `ciclos/{año}/cursos/{curso}/avisos`.
+En 1.3.1 los avisos se leen exclusivamente desde `ciclos/{año}/cursos/{curso}/avisos`.
 Los avisos antiguos se organizan manualmente siguiendo [la guía](AVISOS_POR_CURSO_GUIA.md).
 En Días Semana las cuentas consultan su curso asignado y los invitados el seleccionado.
 Los delegados publican y archivan únicamente en el curso y año de su permiso.
@@ -35,7 +35,7 @@ Actualizá primero el celular que contiene tus notas, iniciá sesión y esperá 
 
 ## Publicar la versión preparada
 
-1. Revisar la Release **v1.3.0** cuando esté preparada y publicar cuando corresponda. Mantener el nombre del archivo Android como `app-release.apk`.
+1. Revisar la Release **v1.3.1** cuando esté preparada y publicar cuando corresponda. Mantener el nombre del archivo Android como `app-release.apk`.
 2. En **Settings → Pages**, seleccionar **GitHub Actions** como origen.
 3. En **Actions**, ejecutar **Publicar A&P para computadora → Run workflow**.
 4. Compartir la dirección común: `https://maximo4250.github.io/Avisos-y-Promedios/`.

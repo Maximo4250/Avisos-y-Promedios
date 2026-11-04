@@ -72,6 +72,7 @@ class _CalendarioMensualState extends State<CalendarioMensual>
   Color get _dorado => AppTheme.detalle;
   late DateTime _mes, _hoy;
   Timer? _reloj;
+  bool _expandido = false;
   @override
   void initState() {
     super.initState();
@@ -120,8 +121,14 @@ class _CalendarioMensualState extends State<CalendarioMensual>
     Theme.of(
       context,
     ); // Actualizar también los acentos de las pantallas abiertas.
-    final dias = diasDelMes(_mes);
     final semana = inicioSemana(_hoy);
+    final dias = _expandido
+        ? diasDelMes(_mes)
+        : List.generate(
+            7,
+            (i) => DateTime(semana.year, semana.month, semana.day + i),
+          );
+    final mesTitulo = _expandido ? _mes : _hoy;
     final cantidades = <DateTime, int>{};
     for (final a in widget.actividades) {
       if (a.fecha != null) {
@@ -148,7 +155,7 @@ class _CalendarioMensualState extends State<CalendarioMensual>
               SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  '${_meses[_mes.month - 1]} ${_mes.year}',
+                  '${_meses[mesTitulo.month - 1]} ${mesTitulo.year}',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                   maxLines: 2,
                 ),
@@ -159,17 +166,32 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                 onPressed: () => widget.onSeleccionar(_hoy),
                 icon: Icon(Icons.today_outlined, size: 20, color: _dorado),
               ),
+              if (_expandido)
+                IconButton(
+                  tooltip: 'Mes anterior',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _mover(-1),
+                  icon: Icon(Icons.chevron_left, size: 23),
+                ),
+              if (_expandido)
+                IconButton(
+                  tooltip: 'Mes siguiente',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _mover(1),
+                  icon: Icon(Icons.chevron_right, size: 23),
+                ),
               IconButton(
-                tooltip: 'Mes anterior',
+                key: const ValueKey('alternar-calendario'),
+                tooltip: _expandido
+                    ? 'Mostrar solo esta semana'
+                    : 'Mostrar todo el mes',
                 visualDensity: VisualDensity.compact,
-                onPressed: () => _mover(-1),
-                icon: Icon(Icons.chevron_left, size: 23),
-              ),
-              IconButton(
-                tooltip: 'Mes siguiente',
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _mover(1),
-                icon: Icon(Icons.chevron_right, size: 23),
+                onPressed: () => setState(() => _expandido = !_expandido),
+                icon: Icon(
+                  _expandido
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                ),
               ),
             ],
           ),
@@ -192,7 +214,12 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                       fit: BoxFit.scaleDown,
                       child: Text(
                         dia,
-                        style: TextStyle(fontSize: 12, color: Colors.white60),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: dia == 'Sáb' || dia == 'Dom'
+                              ? Colors.redAccent
+                              : Colors.white60,
+                        ),
                       ),
                     ),
                   ),
@@ -229,9 +256,11 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                                   widget.seleccionada,
                                 );
                             final cantidad = cantidades[fecha] ?? 0;
-                            final color = hoy
+                            final color = fecha.weekday >= DateTime.saturday
+                                ? Colors.redAccent
+                                : hoy
                                 ? AppTheme.sobreAcento
-                                : fecha.month == _mes.month
+                                : !_expandido || fecha.month == _mes.month
                                 ? Colors.white
                                 : Colors.white38;
                             final etiqueta =
@@ -257,7 +286,7 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                                       borderRadius: BorderRadius.circular(17),
                                       onTap: () => widget.onSeleccionar(fecha),
                                       child: Container(
-                                        height: 58,
+                                        height: _expandido ? 58 : 44,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
                                             17,
@@ -323,26 +352,27 @@ class _CalendarioMensualState extends State<CalendarioMensual>
                 );
               },
             ),
-          SizedBox(height: 8),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 12,
-            runSpacing: 5,
-            children: [
-              Text(
-                '● Actividades',
-                style: TextStyle(color: _dorado, fontSize: 11),
-              ),
-              Text(
-                'Franja de color · semana actual',
-                style: TextStyle(color: Colors.white60, fontSize: 11),
-              ),
-              Text(
-                'Día destacado · hoy',
-                style: TextStyle(color: Colors.white60, fontSize: 11),
-              ),
-            ],
-          ),
+          if (_expandido) SizedBox(height: 8),
+          if (_expandido)
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              runSpacing: 5,
+              children: [
+                Text(
+                  '● Actividades',
+                  style: TextStyle(color: _dorado, fontSize: 11),
+                ),
+                Text(
+                  'Franja de color · semana actual',
+                  style: TextStyle(color: Colors.white60, fontSize: 11),
+                ),
+                Text(
+                  'Día destacado · hoy',
+                  style: TextStyle(color: Colors.white60, fontSize: 11),
+                ),
+              ],
+            ),
         ],
       ),
     );
