@@ -17,9 +17,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await prepararBasePlataforma();
-    await TemaService.instance.cargar();
+    await TemaService.instance.cargar().timeout(const Duration(seconds: 20));
     await Firebase.initializeApp(
-      options: kIsWeb ? opcionesFirebaseWeb : null,
+      options: kIsWeb || defaultTargetPlatform == TargetPlatform.windows
+          ? opcionesFirebaseWeb
+          : null,
     ).timeout(const Duration(seconds: 15));
     await SesionService.instance.prepararLocal();
   } catch (error, stack) {
@@ -62,8 +64,12 @@ Future<void> main() async {
   runApp(const MyAppNotas());
   // Mostrar la primera pantalla antes de pedir permisos o contactar a FCM.
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (!kIsWeb) unawaited(_iniciarNotificaciones());
-    if (!kIsWeb) RegistroInstalacion.instance.iniciar();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      unawaited(_iniciarNotificaciones());
+    }
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      RegistroInstalacion.instance.iniciar();
+    }
     unawaited(_iniciarCuentas());
   });
 }

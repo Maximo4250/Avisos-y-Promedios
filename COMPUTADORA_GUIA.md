@@ -1,55 +1,50 @@
-# A&P en celular y computadora
+# A&P 1.3.2 en Android, Windows y navegador
 
-La versión de computadora es una aplicación web instalable (PWA): se abre en Chrome o Edge y se instala con su propio icono y ventana. No necesita un emulador de Android ni un instalador EXE. La primera apertura requiere Internet.
-
-## Un mismo enlace
-
-Al publicar la carpeta preparada con GitHub Pages, el enlace común será:
+## Un mismo enlace para compartir
 
 https://maximo4250.github.io/Avisos-y-Promedios/
 
-La versión publicada se actualiza ejecutando el flujo de GitHub Actions después de subir los cambios. Una compilación local de prueba no cambia el sitio publicado.
+La página ofrece tres opciones:
 
-La página ofrece dos botones:
+- Android: descarga app-release.apk de la última versión publicada.
+- Windows: descarga AP-Windows-Setup.exe. Programa nativo para Windows 10/11 de 64 bits, sin navegador ni herramientas de desarrollo.
+- Navegador: abre la app web, que sigue disponible por separado.
 
-- Android: descarga `app-release.apk` de la última versión de GitHub.
-- Computadora: abre A&P y permite instalarla desde Chrome o Edge. También se puede usar sin instalar.
+## Instalar y actualizar
 
-Un enlace que termina en `.apk` siempre descarga Android. Para compartir ambas opciones hay que compartir la página común.
+Android: ejecutar el APK nuevo sobre la instalación existente, sin desinstalar.
 
-## Lo que se conserva
+Windows: ejecutar el instalador nuevo sobre el anterior. Instala para el usuario actual, permite crear un acceso directo y conserva las notas en LocalAppData/Avisos y Promedios/datos. El aviso de actualizaciones Android no descarga APK en Windows. Las actualizaciones nativas se instalan con el instalador nuevo. Más detalles: [guía Windows](WINDOWS_NATIVO_GUIA.md).
 
-Horarios, calendario, materias, promedios, pendientes, ideas, modo invitado y cuentas. Usa el Firebase existente y los mismos avisos. No se duplicó la base compartida ni se activó facturación.
+Web: cerrar las ventanas de A&P y volver a abrir la dirección pública para activar los recursos nuevos. La dirección 127.0.0.1 es solo para pruebas locales: no es la página pública.
 
-Desde 1.2.2, las notas se sincronizan con la cuenta, curso y ciclo. Los invitados y los estados de tareas siguen usando almacenamiento local. No borres datos del sitio mientras haya cambios pendientes de sincronizar. Actualizá ambos equipos y seguí [la guía de sincronización](SINCRONIZACION_GUIA.md).
+## Cuenta y datos
 
-Las notificaciones push por curso continúan en Android. En computadora se consultan los avisos dentro de A&P: no se configuró push web. El conteo remoto de instalaciones actual sigue contando Android; no se etiquetan computadoras como si fueran teléfonos.
+Las cuentas, materias, notas sincronizadas y avisos usan el mismo Firebase, curso y año. Esperar «Notas sincronizadas» en el dispositivo que tiene las notas antes de abrir otra instalación. Los datos de invitado y los pendientes marcados son locales y no se trasladan automáticamente del navegador a Windows.
 
-La copia instalada guarda los recursos de la aplicación para posteriores aperturas sin conexión. Los avisos nuevos y las operaciones de cuenta necesitan Internet. Al publicarse una actualización, cerrar todas las ventanas de A&P permite que se active la nueva versión.
+Las notificaciones push y el conteo remoto de instalaciones continúan disponibles en Android. Windows no se registra como si fuera un teléfono. No se duplican bases compartidas ni se activa facturación.
 
-## Publicación cuando se suba el proyecto
+## Publicar
 
-1. Subir el proyecto Flutter al repositorio `Maximo4250/Avisos-y-Promedios`, sin carpetas de compilación, respaldos ni credenciales privadas. Mantener `pubspec.lock` y los archivos de `web/`.
-2. En GitHub: **Settings → Pages → Source → GitHub Actions**.
-3. En **Actions**, ejecutar **Publicar A&P para computadora → Run workflow**. El flujo compila y publica la página común y la app web. No requiere claves de servicio de Firebase.
-4. Publicar el APK Android nuevo en una Release y nombrar el archivo exactamente `app-release.apk`. El botón Android usa `releases/latest/download/app-release.apk` para apuntar siempre a la última Release estable.
-5. Probar ambos botones desde la dirección común. No usar el enlace antiguo que apunta a una versión fija si se quiere ofrecer siempre la última.
+1. Guardar las fuentes en el repositorio, sin bases de datos, respaldos ni credenciales privadas.
+2. Publicar una Release estable con los nombres exactos app-release.apk y AP-Windows-Setup.exe. El ZIP portátil es opcional.
+3. Ejecutar Actions → Publicar A&P para computadora. El flujo compila la web y publica la página común.
+4. En Firebase Remote Config, actualizar latest_version a la versión Android publicada. Mantener download_url en https://github.com/Maximo4250/Avisos-y-Promedios/releases/latest/download/app-release.apk . Publicar los cambios.
+5. Probar las tres opciones desde la página común.
 
-El acceso con correo y contraseña usa la nueva app web de A&P registrada en el proyecto Firebase existente. Si más adelante se añaden proveedores como Google, habrá que autorizar el dominio de GitHub Pages en Authentication antes de habilitarlos.
+La configuración de cliente Firebase no es una credencial administrativa; las reglas siguen protegiendo los datos. No se necesitan claves de servicio para GitHub Pages.
 
-## Compilar localmente
+## Validación y límites
 
-Desde la carpeta del proyecto:
+La compilación nativa Windows 1.3.2+9 fue verificada en la computadora de desarrollo y el usuario confirmó el funcionamiento en otras tres PC. Corrige la incompatibilidad BMI2 de la biblioteca Snappy del SDK. Firebase aún documenta Windows como soporte experimental para desarrollo: https://firebase.google.com/docs/flutter/setup . Las pruebas no garantizan todos los equipos; la web sigue como alternativa.
 
-```powershell
+Para compilar la web:
+
+```
 flutter pub get
 dart run sqflite_common_ffi_web:setup
 flutter build web --release --base-href /Avisos-y-Promedios/app/ --pwa-strategy=none --no-web-resources-cdn
 python tool/preparar_web.py
 ```
 
-La carpeta `build/publicacion_web` es el sitio preparado. Debe servirse mediante HTTP para probarlo, o HTTPS para instalarlo públicamente; abrir su HTML con doble clic no ejecuta la aplicación correctamente.
-
-Se eligió web instalable porque Firebase advierte que su soporte nativo de Windows está orientado al desarrollo, y esta PC no tiene Visual Studio con las herramientas de C++ necesarias para compilar una app nativa de Windows. El almacenamiento web reutiliza el esquema SQLite existente a través de IndexedDB; la biblioteca adaptadora se declara experimental y debe seguir probándose antes de distribuir masivamente.
-
-Fuentes oficiales: https://firebase.google.com/docs/flutter/setup y https://pub.dev/packages/sqflite_common_ffi_web
+Para compilar Windows y su instalador, consultar WINDOWS_NATIVO_GUIA.md.

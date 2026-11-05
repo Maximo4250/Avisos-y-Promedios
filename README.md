@@ -5,13 +5,14 @@ Aplicación escolar para consultar horarios y avisos, organizar pendientes y seg
 ## Usar la aplicación
 
 - **Android:** [Descargar el APK de la última versión publicada](https://github.com/Maximo4250/Avisos-y-Promedios/releases/latest/download/app-release.apk).
-- **Computadora:** versión web instalable desde Chrome o Edge. La página común está en [A&P para celular y computadora](https://maximo4250.github.io/Avisos-y-Promedios/).
+- **Windows 10/11 de 64 bits:** [Descargar el instalador nativo](https://github.com/Maximo4250/Avisos-y-Promedios/releases/latest/download/AP-Windows-Setup.exe), independiente del navegador.
+- **Navegador:** [Versión web y página común de descarga](https://maximo4250.github.io/Avisos-y-Promedios/).
 
-En Android, abrir el APK descargado y elegir Instalar o Actualizar. En computadora, abrir la versión web y elegir **Instalar A&P** desde la aplicación o el menú del navegador. Un APK se instala en Android; la computadora utiliza la aplicación web.
+En Android, abrir el APK y elegir Instalar o Actualizar. En Windows, ejecutar AP-Windows-Setup.exe: instala el programa y permite crear un acceso directo. Para actualizar Windows, ejecutar el instalador nuevo sobre la instalación anterior. La web continúa disponible como opción separada.
 
 ## Funciones
 
-- Calendario mensual con indicadores de actividades, día y semana actuales.
+- Calendario compacto de la semana actual, desplegable a mes completo, con indicadores de actividades y fines de semana en rojo.
 - Horario habitual por día y modo Pendientes semana.
 - Tareas, evaluaciones y trabajos con progreso individual guardado localmente.
 - Materias, notas, promedios, gráficos y datos de cursada.
@@ -22,7 +23,7 @@ En Android, abrir el APK descargado y elegir Instalar o Actualizar. En computado
 - Delegados asignados por el administrador para cargar tareas y evaluaciones.
 - Avisos individuales por curso y año, con archivado y registro de autor.
 
-En 1.3.1 los avisos se leen exclusivamente desde `ciclos/{año}/cursos/{curso}/avisos`.
+En 1.3.2 los avisos se leen exclusivamente desde `ciclos/{año}/cursos/{curso}/avisos`.
 Los avisos antiguos se organizan manualmente siguiendo [la guía](AVISOS_POR_CURSO_GUIA.md).
 En Días Semana las cuentas consultan su curso asignado y los invitados el seleccionado.
 Los delegados publican y archivan únicamente en el curso y año de su permiso.
@@ -35,7 +36,7 @@ Actualizá primero el celular que contiene tus notas, iniciá sesión y esperá 
 
 ## Publicar la versión preparada
 
-1. Revisar la Release **v1.3.1** cuando esté preparada y publicar cuando corresponda. Mantener el nombre del archivo Android como `app-release.apk`.
+1. Publicar la Release **v1.3.2** con `app-release.apk` y `AP-Windows-Setup.exe`. Ambos nombres deben mantenerse para conservar los enlaces de descarga.
 2. En **Settings → Pages**, seleccionar **GitHub Actions** como origen.
 3. En **Actions**, ejecutar **Publicar A&P para computadora → Run workflow**.
 4. Compartir la dirección común: `https://maximo4250.github.io/Avisos-y-Promedios/`.
@@ -62,6 +63,7 @@ La configuración de cliente Firebase incluida identifica el proyecto y no es un
 
 ## Guías
 
+- [Windows nativo y compilación del instalador](WINDOWS_NATIVO_GUIA.md)
 - [Instalación y publicación para computadora](COMPUTADORA_GUIA.md)
 - [Cuentas y cursos](FASE_2_GUIA.md)
 - [Calendario y fechas](CALENDARIO_GUIA.md)

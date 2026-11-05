@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 class VerificadorFirebase {
   static Future<void> comprobarActualizacion(BuildContext context) async {
     // La versión web se actualiza al abrirla; nunca ofrecer un APK en computadora.
-    if (kIsWeb) return;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     try {
       final remoteConfig = FirebaseRemoteConfig.instance;
 

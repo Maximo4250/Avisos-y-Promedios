@@ -16,9 +16,9 @@ class SesionService extends ChangeNotifier with WidgetsBindingObserver {
        _base = base ?? DatabaseHelper.instance,
        _notificaciones =
            notificaciones ??
-           (kIsWeb
-               ? const SuscripcionesSinPush()
-               : SuscripcionesFirebaseCurso());
+           (!kIsWeb && defaultTargetPlatform == TargetPlatform.android
+               ? SuscripcionesFirebaseCurso()
+               : const SuscripcionesSinPush());
   static final instance = SesionService();
   final RepositorioCuentas _cuentas;
   final DatabaseHelper _base;
